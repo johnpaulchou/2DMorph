@@ -6,7 +6,7 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # Find ROOT package
-find_package(ROOT REQUIRED COMPONENTS RooFit)
+find_package(ROOT REQUIRED COMPONENTS RooFit RooFitCore)
 
 # Include ROOT headers
 include_directories(${ROOT_INCLUDE_DIRS})
