@@ -73,7 +73,7 @@ int main(int argc, char* argv[])
   m_o=TX_MAX; m_p=TY_MIN; RooProdPdf* G3=create2DGauss("G3",x,y,m_o,m_p,m_o*0.2,m_p*0.2); grid.addPdf(*G3,bintx.binNumber(m_o),binty.binNumber(m_p));
   m_o=TX_MAX; m_p=TY_MAX; RooProdPdf* G4=create2DGauss("G4",x,y,m_o,m_p,m_o*0.2,m_p*0.2); grid.addPdf(*G4,bintx.binNumber(m_o),binty.binNumber(m_p));
   
-  RooMomentMorphFuncND morph("morph","morph",RooArgList(tx,ty),RooArgList(x,y),grid,RooMomentMorphFuncND::NonLinearPosFractions);
+  RooMomentMorphFuncND morph("morph","morph",RooArgList(tx,ty),RooArgList(x,y),grid,RooMomentMorphFuncND::NonLinear);
   morph.setPdfMode();
   RooWrapperPdf pdf("morph_pdf","morph_pdf",morph,true);
   
@@ -81,8 +81,8 @@ int main(int argc, char* argv[])
   tx.setVal(2);
   ty.setVal(300);
   TH2D* hist = new TH2D("hist", "hist", 100, X_MIN, X_MAX, 100, Y_MIN, Y_MAX);
-  //  pdf.generateBinned(RooArgSet(x,y),10000,true)->fillHistogram(hist,RooArgList(x,y));
-  G4->generateBinned(RooArgSet(x,y),10000,true)->fillHistogram(hist,RooArgList(x,y));
+  pdf.generateBinned(RooArgSet(x,y),10000,true)->fillHistogram(hist,RooArgList(x,y));
+  //  G4->generateBinned(RooArgSet(x,y),10000,true)->fillHistogram(hist,RooArgList(x,y));
   hist->Draw();
   app.Run();
   
