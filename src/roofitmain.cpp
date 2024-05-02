@@ -11,6 +11,8 @@
 #include <RooWrapperPdf.h>
 
 #include <TH2D.h>
+#include <TCanvas.h>
+#include <TVectorD.h>
 
 using namespace RooFit;
 using namespace std;
@@ -24,9 +26,6 @@ const double TX_MIN=0.4;
 const double TX_MAX=4.0;
 const double TY_MIN=200.;
 const double TY_MAX=3000.;
-
-const double TX_STEP=0.1;
-const double TY_STEP=10;
 
 const string concat(const string& s1, const string& s2)
 {
@@ -49,6 +48,12 @@ RooProdPdf* create2DGauss(string name, RooRealVar& x, RooRealVar& y, double mean
   return pdf;
 }
 
+int getBin(RooBinning& binning, double val)
+{
+  if(val>=binning.highBound()) return binning.numBins();
+  else return binning.binNumber(val);
+}
+
 int main(int argc, char* argv[])
 {
   TApplication app("myApp", nullptr, nullptr);
@@ -62,28 +67,42 @@ int main(int argc, char* argv[])
   RooRealVar ty("ty","ty",TY_MIN,TY_MAX);
 
   // grid binning
-  RooBinning bintx((TX_MAX-TX_MIN)/TX_STEP,TX_MIN,TX_MAX);
-  RooBinning binty((TY_MAX-TY_MIN)/TY_STEP,TY_MIN,TY_MAX);
+  RooBinning bintx(1,TX_MIN,TX_MAX);
+  RooBinning binty(1,TY_MIN,TY_MAX);
   RooMomentMorphFuncND::Grid2 grid(bintx,binty);
 
   double m_p, m_o;
-  m_o=TX_MIN; m_p=TY_MIN; RooProdPdf* G1=create2DGauss("G1",x,y,m_o,m_p,m_o*0.2,m_p*0.2); grid.addPdf(*G1,bintx.binNumber(m_o),binty.binNumber(m_p));
-			     
-  m_o=TX_MIN; m_p=TY_MAX; RooProdPdf* G2=create2DGauss("G2",x,y,m_o,m_p,m_o*0.2,m_p*0.2); grid.addPdf(*G2,bintx.binNumber(m_o),binty.binNumber(m_p));
-  m_o=TX_MAX; m_p=TY_MIN; RooProdPdf* G3=create2DGauss("G3",x,y,m_o,m_p,m_o*0.2,m_p*0.2); grid.addPdf(*G3,bintx.binNumber(m_o),binty.binNumber(m_p));
-  m_o=TX_MAX; m_p=TY_MAX; RooProdPdf* G4=create2DGauss("G4",x,y,m_o,m_p,m_o*0.2,m_p*0.2); grid.addPdf(*G4,bintx.binNumber(m_o),binty.binNumber(m_p));
-  
-  RooMomentMorphFuncND morph("morph","morph",RooArgList(tx,ty),RooArgList(x,y),grid,RooMomentMorphFuncND::NonLinear);
+  m_o=TX_MIN; m_p=TY_MIN; RooProdPdf* G1=create2DGauss("G1",x,y,m_o,m_p,m_o*0.06,m_p*0.03); grid.addPdf(*G1,getBin(bintx,m_o),getBin(binty,m_p));
+  m_o=TX_MIN; m_p=TY_MAX; RooProdPdf* G2=create2DGauss("G2",x,y,m_o,m_p,m_o*0.06,m_p*0.03); grid.addPdf(*G2,getBin(bintx,m_o),getBin(binty,m_p));
+  m_o=TX_MAX; m_p=TY_MIN; RooProdPdf* G3=create2DGauss("G3",x,y,m_o,m_p,m_o*0.06,m_p*0.03); grid.addPdf(*G3,getBin(bintx,m_o),getBin(binty,m_p));
+  m_o=TX_MAX; m_p=TY_MAX; RooProdPdf* G4=create2DGauss("G4",x,y,m_o,m_p,m_o*0.06,m_p*0.03); grid.addPdf(*G4,getBin(bintx,m_o),getBin(binty,m_p));
+
+  RooMomentMorphFuncND morph("morph","morph",RooArgList(tx,ty),RooArgList(x,y),grid,RooMomentMorphFuncND::Linear);
   morph.setPdfMode();
   RooWrapperPdf pdf("morph_pdf","morph_pdf",morph,true);
   
-  // generate at a given point
-  tx.setVal(2);
-  ty.setVal(300);
-  TH2D* hist = new TH2D("hist", "hist", 100, X_MIN, X_MAX, 100, Y_MIN, Y_MAX);
-  pdf.generateBinned(RooArgSet(x,y),10000,true)->fillHistogram(hist,RooArgList(x,y));
-  //  G4->generateBinned(RooArgSet(x,y),10000,true)->fillHistogram(hist,RooArgList(x,y));
-  hist->Draw();
+  auto framex = x.frame();
+  auto framey = y.frame();
+
+    // generate at a given point
+  tx.setVal(2.9);
+  ty.setVal(489);
+  pdf.plotOn(framex, RooFit::LineColor(kBlue));
+  pdf.plotOn(framey, RooFit::LineColor(kBlue));
+
+  // change the point's value
+  tx.setVal(3.4);
+  ty.setVal(725);
+  pdf.plotOn(framex, RooFit::LineColor(kRed));
+  pdf.plotOn(framey, RooFit::LineColor(kRed));
+  TCanvas c;
+  c.Divide(2,1);
+  c.cd(1);
+  framex->Draw();
+  c.cd(2);
+  framey->Draw();
+  framey->Draw("same");
+
   app.Run();
   
   return 0;
