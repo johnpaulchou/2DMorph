@@ -1,4 +1,6 @@
 #include <iostream>
+#include <sstream>
+
 #include <RooRealVar.h>
 #include <RooDataHist.h>
 #include <RooGaussian.h>
@@ -9,23 +11,27 @@
 #include <TApplication.h>
 #include <RooBinning.h>
 #include <RooWrapperPdf.h>
+#include <RooHistPdf.h>
 
 #include <TH2D.h>
 #include <TCanvas.h>
 #include <TVectorD.h>
+#include <TFile.h>
 
 using namespace RooFit;
 using namespace std;
 
+TFile *rootfile;
+
 const double X_MIN=0.;
 const double X_MAX=5.;
-const double Y_MIN=0.;
+const double Y_MIN=0;
 const double Y_MAX=4000.;
 
-const double TX_MIN=0.4;
-const double TX_MAX=4.0;
-const double TY_MIN=200.;
-const double TY_MAX=3000.;
+const double TX_MIN=0.5;
+const double TX_MAX=2.1;
+const double TY_MIN=450.;
+const double TY_MAX=1050.;
 
 const string concat(const string& s1, const string& s2)
 {
@@ -48,6 +54,25 @@ RooProdPdf* create2DGauss(string name, RooRealVar& x, RooRealVar& y, double mean
   return pdf;
 }
 
+RooHistPdf* create2DHistPdf(string name, string filename, string histname, RooRealVar& x, RooRealVar& y)
+{
+  rootfile=new TFile(filename.c_str());
+  if (rootfile->IsZombie()) {
+    cout << "Error: Cannot open input file " << filename << endl;
+    return 0;
+  }
+  rootfile->cd();
+  TH2* hist2D=dynamic_cast<TH2*>(rootfile->Get(histname.c_str()));
+  if(!hist2D) {
+    cout << "Error: Cannot get histogram " << histname << endl;
+    return 0;
+  }
+  RooDataHist *dataHist=new RooDataHist((name+"dataHist").c_str(), "dataHist", RooArgList(x, y), hist2D);
+  RooHistPdf *histPdf=new RooHistPdf((name+"histPdf").c_str(), "histPdf", RooArgSet(x, y), *dataHist);
+  return histPdf;
+
+}
+
 int getBin(RooBinning& binning, double val)
 {
   if(val>=binning.highBound()) return binning.numBins();
@@ -56,7 +81,8 @@ int getBin(RooBinning& binning, double val)
 
 int main(int argc, char* argv[])
 {
-  TApplication app("myApp", nullptr, nullptr);
+  //  TApplication app("myApp", nullptr, nullptr);
+  TFile* newfile=new TFile("../data/hists.root","RECREATE");
 
   // observables
   RooRealVar x("x", "x", X_MIN, X_MAX);
@@ -71,11 +97,14 @@ int main(int argc, char* argv[])
   RooBinning binty(1,TY_MIN,TY_MAX);
   RooMomentMorphFuncND::Grid2 grid(bintx,binty);
 
-  double m_p, m_o;
-  m_o=TX_MIN; m_p=TY_MIN; RooProdPdf* G1=create2DGauss("G1",x,y,m_o,m_p,m_o*0.06,m_p*0.03); grid.addPdf(*G1,getBin(bintx,m_o),getBin(binty,m_p));
+  /*  m_o=TX_MIN; m_p=TY_MIN; RooProdPdf* G1=create2DGauss("G1",x,y,m_o,m_p,m_o*0.06,m_p*0.03); grid.addPdf(*G1,getBin(bintx,m_o),getBin(binty,m_p));
   m_o=TX_MIN; m_p=TY_MAX; RooProdPdf* G2=create2DGauss("G2",x,y,m_o,m_p,m_o*0.06,m_p*0.03); grid.addPdf(*G2,getBin(bintx,m_o),getBin(binty,m_p));
   m_o=TX_MAX; m_p=TY_MIN; RooProdPdf* G3=create2DGauss("G3",x,y,m_o,m_p,m_o*0.06,m_p*0.03); grid.addPdf(*G3,getBin(bintx,m_o),getBin(binty,m_p));
-  m_o=TX_MAX; m_p=TY_MAX; RooProdPdf* G4=create2DGauss("G4",x,y,m_o,m_p,m_o*0.06,m_p*0.03); grid.addPdf(*G4,getBin(bintx,m_o),getBin(binty,m_p));
+  m_o=TX_MAX; m_p=TY_MAX; RooProdPdf* G4=create2DGauss("G4",x,y,m_o,m_p,m_o*0.06,m_p*0.03); grid.addPdf(*G4,getBin(bintx,m_o),getBin(binty,m_p));*/
+  RooAbsPdf* G1=create2DHistPdf("P450O0p5","../data/mass2D_Phi_450_omega_0p5.root","hist_sum_1",x,y);   grid.addPdf(*G1,0,0);
+  RooAbsPdf* G2=create2DHistPdf("P450O2p1","../data/mass2D_Phi_450_omega_2p1.root","hist_sum_1",x,y);   grid.addPdf(*G2,1,0);
+  RooAbsPdf* G3=create2DHistPdf("P1050O0p5","../data/mass2D_Phi_1050_omega_0p5.root","hist_sum_1",x,y); grid.addPdf(*G3,0,1);
+  RooAbsPdf* G4=create2DHistPdf("P1050O2p1","../data/mass2D_Phi_1050_omega_2p1.root","hist_sum_1",x,y); grid.addPdf(*G4,1,1);
 
   RooMomentMorphFuncND morph("morph","morph",RooArgList(tx,ty),RooArgList(x,y),grid,RooMomentMorphFuncND::Linear);
   morph.setPdfMode();
@@ -84,26 +113,23 @@ int main(int argc, char* argv[])
   auto framex = x.frame();
   auto framey = y.frame();
 
-    // generate at a given point
-  tx.setVal(2.9);
-  ty.setVal(489);
-  pdf.plotOn(framex, RooFit::LineColor(kBlue));
-  pdf.plotOn(framey, RooFit::LineColor(kBlue));
+  for(int i=0; i<=8; i++) {
+    tx.setVal(0.5+0.2*i);
+    for(int j=0; j<=6; j++) {
+      ty.setVal(450.+100.*j);
 
-  // change the point's value
-  tx.setVal(3.4);
-  ty.setVal(725);
-  pdf.plotOn(framex, RooFit::LineColor(kRed));
-  pdf.plotOn(framey, RooFit::LineColor(kRed));
-  TCanvas c;
-  c.Divide(2,1);
-  c.cd(1);
-  framex->Draw();
-  c.cd(2);
-  framey->Draw();
-  framey->Draw("same");
+      std::cout << 0.5+0.2*i << " " << 450.+100.*j << std::endl;
+      
+      TH2* hist=dynamic_cast<TH2*>(pdf.createHistogram("x,y",100,100));
+      ostringstream oss;
+      oss << "h" << i << "_" << j;
+      TH2* hclone=dynamic_cast<TH2*>(hist->Clone(oss.str().c_str()));
+      newfile->cd();
+      hclone->Write();
+    }
+  }
 
-  app.Run();
+  // app.Run();
   
   return 0;
 }
