@@ -25,15 +25,18 @@ void DrawHist1(void)
   TH2D* h10=dynamic_cast<TH2D*>(GetHist("../data/mass2D_Phi_450_omega_2p1.root","hist_sum_1"));
   TH2D* h01=dynamic_cast<TH2D*>(GetHist("../data/mass2D_Phi_1050_omega_0p5.root","hist_sum_1"));
   TH2D* h11=dynamic_cast<TH2D*>(GetHist("../data/mass2D_Phi_1050_omega_2p1.root","hist_sum_1"));
-
+  TH2D* h55=dynamic_cast<TH2D*>(GetHist("../data/mass2D_Phi_750_omega_1p3.root","hist_sum_1"));
+  
   TH2F* hGen00=dynamic_cast<TH2F*>(GetHist("../data/hists.root","h0_0"));
   TH2F* hGen10=dynamic_cast<TH2F*>(GetHist("../data/hists.root","h8_0"));
   TH2F* hGen01=dynamic_cast<TH2F*>(GetHist("../data/hists.root","h0_6"));
   TH2F* hGen11=dynamic_cast<TH2F*>(GetHist("../data/hists.root","h8_6"));
+  TH2F* hGen55=dynamic_cast<TH2F*>(GetHist("../data/hists.root","h4_3"));
 
-  for(int i=0; i<4; i++) {
+  for(int i=0; i<5; i++) {
   
     TCanvas *c=new TCanvas();
+    c->SetWindowSize(900,450);
     c->Divide(2,1);
 
     TH2D* h1;
@@ -42,6 +45,7 @@ void DrawHist1(void)
     if(i==1) { h1=h01; h2=hGen01; }
     if(i==2) { h1=h10; h2=hGen10; }
     if(i==3) { h1=h11; h2=hGen11; }
+    if(i==4) { h1=h55; h2=hGen55; }
     
     TH1* hx1=h1->ProjectionX();
     TH1* hx2=h2->ProjectionX();
@@ -68,15 +72,19 @@ void DrawHist1(void)
 
     hx1->SetTitle("");
     hx1->GetXaxis()->SetTitle("M_{2p} [GeV]");
+    hx1->GetYaxis()->SetTitle("Events/0.05 GeV");
+    hx1->GetYaxis()->SetTitleOffset(1.5);
+    
     c->cd(1);
     hx1->DrawNormalized();
     hx2->DrawNormalized("same");
     
-    TLegend *leg=new TLegend(0.47,0.63,1.0,0.75);
+    TLegend *leg=new TLegend(0.433,0.634,0.891,0.742);
     if(i==0) leg->AddEntry(hx1, "M_{#phi}=450 GeV, M_{#omega}=0.5 GeV", "f");
     if(i==1) leg->AddEntry(hx1, "M_{#phi}=1050 GeV, M_{#omega}=0.5 GeV", "f");
     if(i==2) leg->AddEntry(hx1, "M_{#phi}=450 GeV, M_{#omega}=2.1 GeV", "f");
     if(i==3) leg->AddEntry(hx1, "M_{#phi}=1050 GeV, M_{#omega}=2.1 GeV", "f");
+    if(i==4) leg->AddEntry(hx1, "M_{#phi}=750 GeV, M_{#omega}=1.3 GeV", "f");
     leg->AddEntry(hx2, "Morphed", "l");
     leg->SetBorderSize(0);
     leg->SetFillStyle(0);
@@ -84,10 +92,17 @@ void DrawHist1(void)
 
     hy1->SetTitle("");
     hy1->GetXaxis()->SetTitle("M_{2p#gamma} [GeV]");
+    hy1->GetYaxis()->SetTitle("Events/40 GeV");    
     c->cd(2);
     hy1->DrawNormalized();
     hy2->DrawNormalized("same");
     leg->Draw();
+
+    if(i==0) c->SaveAs("Mp450Mo50.pdf");
+    if(i==1) c->SaveAs("Mp1050Mo50.pdf");
+    if(i==2) c->SaveAs("Mp450Mo21.pdf");
+    if(i==3) c->SaveAs("Mp1050Mo21.pdf");
+    if(i==4) c->SaveAs("Mp750Mo13.pdf");
   }
 
   
@@ -121,14 +136,14 @@ void DrawHist2(void)
       h[j]->SetLineWidth(3);
       h[j]->SetLineColor(colors[j]);
       h[j]->SetLineStyle(j+1);
-      h[j]->SetMaximum(0.6);
-      h[j]->GetYaxis()->SetRangeUser(0,0.6);
+      h[j]->SetMaximum(0.65);
+      h[j]->GetYaxis()->SetRangeUser(0,0.65);
       
       if(j==0){
 	h[j]->SetStats(0);
 	h[j]->GetXaxis()->SetRangeUser(300,1200);
 	h[j]->SetTitle("");
-	h[j]->GetYaxis()->SetTitle("Events/0.1 GeV");
+	h[j]->GetYaxis()->SetTitle("Events/40 GeV");
 	h[j]->GetXaxis()->SetTitle("M_{2p#gamma} [GeV]");
 	h[j]->DrawNormalized();
       }
@@ -166,7 +181,7 @@ void DrawHist2(void)
 	h[i]->SetStats(0);
 	h[i]->GetXaxis()->SetRangeUser(0,3);
 	h[i]->SetTitle("");
-	h[i]->GetYaxis()->SetTitle("Events/0.1 GeV");
+	h[i]->GetYaxis()->SetTitle("Events/0.10 GeV");
 	h[i]->GetXaxis()->SetTitle("M_{2p} [GeV]");
 	h[i]->DrawNormalized();
       }
@@ -185,9 +200,10 @@ void DrawHist2(void)
   
 }
 
+
 void DrawHist(void)
 {
   DrawHist1();
-  //  DrawHist2();
+  DrawHist2();
   return;
 }
