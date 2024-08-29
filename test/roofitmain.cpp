@@ -7,11 +7,12 @@
 #include <RooProdPdf.h>
 #include <RooPlot.h>
 #include <RooWorkspace.h>
-#include <RooMomentMorphFuncND.h>
 #include <TApplication.h>
 #include <RooBinning.h>
 #include <RooWrapperPdf.h>
 #include <RooHistPdf.h>
+
+#include <RooMomentMorphFuncNDFix.h>
 
 #include <TH2D.h>
 #include <TCanvas.h>
@@ -95,7 +96,7 @@ int main(int argc, char* argv[])
   // grid binning
   RooBinning bintx(1,TX_MIN,TX_MAX);
   RooBinning binty(1,TY_MIN,TY_MAX);
-  RooMomentMorphFuncND::Grid2 grid(bintx,binty);
+  RooMomentMorphFuncNDFix::Grid2 grid(bintx,binty);
 
   /*  m_o=TX_MIN; m_p=TY_MIN; RooProdPdf* G1=create2DGauss("G1",x,y,m_o,m_p,m_o*0.06,m_p*0.03); grid.addPdf(*G1,getBin(bintx,m_o),getBin(binty,m_p));
   m_o=TX_MIN; m_p=TY_MAX; RooProdPdf* G2=create2DGauss("G2",x,y,m_o,m_p,m_o*0.06,m_p*0.03); grid.addPdf(*G2,getBin(bintx,m_o),getBin(binty,m_p));
@@ -106,7 +107,7 @@ int main(int argc, char* argv[])
   RooAbsPdf* G3=create2DHistPdf("P1050O0p5","../data/mass2D_Phi_1050_omega_0p5.root","hist_sum_1",x,y); grid.addPdf(*G3,0,1);
   RooAbsPdf* G4=create2DHistPdf("P1050O2p1","../data/mass2D_Phi_1050_omega_2p1.root","hist_sum_1",x,y); grid.addPdf(*G4,1,1);
 
-  RooMomentMorphFuncND morph("morph","morph",RooArgList(tx,ty),RooArgList(x,y),grid,RooMomentMorphFuncND::Linear);
+  RooMomentMorphFuncNDFix morph("morph","morph",RooArgList(tx,ty),RooArgList(x,y),grid,RooMomentMorphFuncNDFix::Linear);
   morph.setPdfMode();
   RooWrapperPdf pdf("morph_pdf","morph_pdf",morph,true);
   
