@@ -22,33 +22,33 @@ include_directories(${ROOT_INCLUDE_DIRS})
 # create dictionary
 ROOT_GENERATE_DICTIONARY(2DMorph_dict ${PROJECT_SOURCE_DIR}/include/RooMomentMorphFuncNDFix.h LINKDEF src/linkdef.h)
 
-# create a static library from the src directory and the dictionary source
-add_library(2DMorph_lib STATIC
+# create a shared library from the src directory and the dictionary source
+add_library(2DMorph SHARED
     src/TH1Pdf.cc
     src/RooMomentMorphFuncNDFix.cxx
     2DMorph_dict.cxx
     )
-add_library(2DMorph::library ALIAS 2DMorph_lib)
 
 
 # Set the directories that should be included in the build command for this target
 # when running g++ these will be included as -I/directory/path/
-target_include_directories(2DMorph_lib
+target_include_directories(2DMorph
     PUBLIC
          ${PROJECT_SOURCE_DIR}/include
 	 )
 
 
 # create executables
-add_executable(2DMorph
+add_executable(2DMorphexe
 	test/roofitmain.cpp
 )
 
+# needed for a shared lib: new library depends on ROOT
+target_link_libraries(2DMorph ${ROOT_LIBRARIES})
 # Link ROOT libraries
-#target_link_libraries(2DMorph_lib ${ROOT_LIBRARIES})
-target_link_libraries(2DMorph
+target_link_libraries(2DMorphexe
 	PUBLIC
-	2DMorph::library
+	2DMorph
 	${ROOT_LIBRARIES}
 	)
 
