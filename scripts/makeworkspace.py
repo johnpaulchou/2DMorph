@@ -83,8 +83,8 @@ def getAcc(filename, histnames, normhistname):
     integral=0.0
     for histname in histnames:
         h=getTH1(filename, histname)
-        integral += h.GetEntries()
-#        integral += h.Integral(1,h.GetXaxis().GetNbins(),1,h.GetYaxis().GetNbins())
+#        integral += h.GetEntries()
+        integral += h.Integral(1,h.GetXaxis().GetNbins(),1,h.GetYaxis().GetNbins())
 
     hn=getTH1(filename, normhistname)
     norm=hn.GetBinContent(1)
